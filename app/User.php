@@ -37,9 +37,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
     
-    public function tasklists()
+    public function tasks()
     {
-        return $this->hasMany(Tasklist::class);
+        return $this->hasMany(Task::class);
     }
     
      /**
@@ -47,6 +47,6 @@ class User extends Authenticatable
      */
     public function loadRelationshipCounts()
     {
-        $this->loadCount('tasklists');
+        $this->loadCount('tasks');
     }
 }

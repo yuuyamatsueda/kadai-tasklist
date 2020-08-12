@@ -26,11 +26,11 @@ class TasksController extends Controller
             // 認証済みユーザを取得
             $user = \Auth::user();
             // ユーザの投稿の一覧を作成日時の降順で取得
-            $tasklists = $user->tasklists()->orderBy('created_at', 'desc')->paginate(10);
+            $taskls = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
 
             $data = [
                 'user' => $user,
-                'tasklists' => $tasklists,
+                'tasks' => $tasks,
             ];
         }
     }
@@ -58,15 +58,32 @@ class TasksController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
+            // 'user_id' => 'required|max:10',
             'status' => 'required|max:10',
-            'content' => 'required|max:10',
+            'content' => 'required|max:255',
             ]);
         
-        $task = new Task;
-        $task->status = $request->status;
-        $task->content = $request->content;
-        $task->save();
+        $request->user()->tasks()->create([
+            // $task = new Task,
+            // 'user_id' => $request->user_id,
+            'content' => $request->content,
+            'status' => $request->status,
+            // $task->save(),
+            ]);
+        // $task = new Task;
+        // $task->user_id = $request->user_id;
+        // $task->status = $request->status;
+        // $task->content = $request->content;
+        // $task->save();
         return redirect('/');
+        // // バリデーション
+        // $request->validate([
+        //     'content' => 'required|max:255',
+        // ]);
+
+        // // 認証済みユーザ（閲覧者）の投稿として作成（リクエストされた値をもとに作成）
+        // $request->user()->microposts()->create([
+        //     'content' => $request->content,
     }
 
     /**
@@ -78,9 +95,13 @@ class TasksController extends Controller
     public function show($id)
     {
         $task = Task::findOrFail($id);
+        if (\Auth::id() === $task->user_id){
         return view('tasks.show', [
             'task' => $task,
-        ]);    
+        ]);    }
+        else{
+            return redirect('/');
+        }
     }
 
     /**
@@ -92,6 +113,7 @@ class TasksController extends Controller
     public function edit($id)
     {
         $task = Task::findOrFail($id);
+        
         return view('tasks.edit', [
             'task' => $task,
         ]);    
@@ -127,7 +149,16 @@ class TasksController extends Controller
     public function destroy($id)
     {
         $task = Task::findOrFail($id);
-        $task->delete();
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+        }
+        
         return redirect('/');
+       
     }
 }
+
+//  // 認証済みユーザ（閲覧者）がその投稿の所有者である場合は、投稿を削除
+//         if (\Auth::id() === $micropost->user_id) {
+//             $micropost->delete();
+//         }
